@@ -65,25 +65,15 @@ spread_dict = differences(training)
 
 def zero_crossings(data):
     crossing_dict = {}
-    for df in data:
-        ts = data[df]
-        ts = pd.DataFrame(data[df], columns=['spread'])
-        ts['spread_shift'] = ts['spread'].shift(1)
-        ts['zero_cross'] = ((ts['spread'] > 0) & (ts['spread_shift'] < 0)) | ((ts['spread'] < 0) & (ts['spread_shift'] > 0))
-        crossing_dict[df] = ts
+    for pair, ts in data.items():
+        ts_shift = ts.shift(1)
+        zero_cross = ((ts > 0) & (ts_shift < 0)) | ((ts < 0) & (ts_shift > 0))
+        crossing_dict[pair] = zero_cross.sum()
     return crossing_dict
+
 zero_crossing_dict = zero_crossings(spread_dict)
 
-
-# calculate number of zero-crossings for all pairs
-def number_of_zc(data):
-    zc_dict = {}
-    for df in data:
-        zc_dict[df] = data[df]['zero_cross'].sum()
-    return zc_dict
-zc_dict = number_of_zc(zero_crossing_dict)
-
-sorted_zc_dict = {k: v for k, v in sorted(zc_dict.items(), key=lambda item: item[1], reverse=True)}
+sorted_zc_dict = {k: v for k, v in sorted(zero_crossing_dict.items(), key=lambda item: item[1], reverse=True)}
 top10_pairs = list(sorted_zc_dict)[:10]
 
 def pairs_df(data, pair_list, threshold=2):
